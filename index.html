@@ -1,0 +1,305 @@
+<!DOCTYPE html>
+<html lang="zh-TW">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>晚宴邀請與座位系統</title>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
+    <style>
+        :root {
+            --ceci-green: #007A3E; /* 台灣世曦主視覺綠色 */
+            --ceci-light: #E8F5E9;
+            --festive-red: #D32F2F;
+            --gold: #FFD700;
+        }
+        
+        body {
+            font-family: "Microsoft JhengHei", "PingFang TC", sans-serif;
+            margin: 0;
+            padding: 0;
+            background-color: #f5f5f5;
+        }
+        
+        .container {
+            max-width: 600px;
+            margin: 0 auto;
+            background: #fff;
+            min-height: 100vh;
+            box-shadow: 0 0 10px rgba(0,0,0,0.1);
+        }
+
+        .btn {
+            background-color: var(--ceci-green);
+            color: white;
+            border: none;
+            padding: 14px 20px;
+            border-radius: 6px;
+            cursor: pointer;
+            font-size: 16px;
+            width: 100%;
+            font-weight: bold;
+            transition: background-color 0.2s;
+        }
+        .btn:disabled {
+            background-color: #b0bec5;
+            cursor: not-allowed;
+        }
+
+        /* 系統主要畫面 */
+        #app-section {
+            padding-bottom: 40px;
+        }
+
+        .section-container {
+            padding: 20px;
+            border-bottom: 1px dashed #ddd;
+        }
+
+        /* 邀請函區塊 */
+        #invitation-card {
+            background-color: var(--festive-red);
+            color: var(--gold);
+            padding: 40px 20px;
+            text-align: center;
+            border-radius: 12px;
+            border: 5px double var(--gold);
+            margin-bottom: 15px;
+        }
+        #invitation-card h1 {
+            margin: 0 0 20px 0;
+            font-size: 32px;
+            letter-spacing: 5px;
+        }
+        #invitation-card p {
+            font-size: 18px;
+            line-height: 1.6;
+            margin: 10px 0;
+        }
+        .invitation-details {
+            margin-top: 25px;
+            font-size: 18px;
+            font-weight: bold;
+            border-top: 1px solid var(--gold);
+            padding-top: 15px;
+        }
+
+        /* 餐敘座位表區塊 */
+        #seating-card {
+            background-color: #fff;
+            padding: 25px 15px;
+            border: 2px solid var(--ceci-green);
+            border-radius: 12px;
+            margin-bottom: 15px;
+        }
+        .seating-title {
+            text-align: center;
+            color: var(--ceci-green);
+            font-weight: bold;
+            margin-bottom: 30px;
+        }
+        .seating-title .date-time { font-size: 18px; }
+        .seating-title .main-title { font-size: 26px; margin: 8px 0; letter-spacing: 2px; }
+        .seating-title .details { font-size: 16px; }
+
+        /* 圓桌與座位響應式容器 */
+        .seating-wrapper {
+            position: relative;
+            width: 95%;
+            max-width: 420px;
+            margin: 0 auto;
+        }
+        /* 透過 ::before 維持 1:1 比例 */
+        .seating-wrapper::before {
+            content: "";
+            display: block;
+            padding-top: 100%;
+        }
+        .round-table {
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            width: 42%;
+            height: 42%;
+            background-color: var(--ceci-green);
+            border: 4px solid var(--ceci-light);
+            color: white;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 22px;
+            font-weight: bold;
+            letter-spacing: 3px;
+            box-shadow: 0 4px 10px rgba(0,0,0,0.2);
+        }
+        .seat-box {
+            position: absolute;
+            transform: translate(-50%, -50%);
+            background: #fff;
+            border: 2px solid var(--ceci-green);
+            border-radius: 6px;
+            padding: 2px;
+            width: 85px; /* 適合手機的寬度，防重疊 */
+            box-shadow: 0 2px 6px rgba(0,0,0,0.1);
+            z-index: 2;
+        }
+        .guest-select {
+            width: 100%;
+            border: none;
+            background: transparent;
+            text-align: center;
+            font-size: 13px;
+            font-weight: bold;
+            color: #333;
+            padding: 6px 0;
+            outline: none;
+            cursor: pointer;
+            /* 移除原生外觀以確保美觀 */
+            -webkit-appearance: none;
+            -moz-appearance: none;
+            appearance: none;
+        }
+        .guest-select:focus {
+            color: var(--ceci-green);
+        }
+
+        /* 地圖區塊 */
+        .fallback-link {
+            display: block;
+            text-align: center;
+            margin-top: 12px;
+            color: var(--ceci-green);
+            font-size: 14px;
+            text-decoration: underline;
+        }
+    </style>
+</head>
+<body>
+
+<div class="container">
+    <div id="app-section">
+        
+        <div class="section-container">
+            <div id="invitation-card">
+                <h1>邀請函</h1>
+                <p>敬愛的長官與貴賓 您好：</p>
+                <p>為感謝您的支持與指教<br>特設晚宴款待，敬邀 撥冗出席</p>
+                <div class="invitation-details">
+                    <p>【時間】6月16日（二）晚上 18:30</p>
+                    <p>【地點】榮榮園 晚宴包廂</p>
+                </div>
+            </div>
+            <button class="btn" style="background-color: var(--festive-red);" onclick="exportImage('invitation-card', 'invitation.png')">匯出邀請函 (PNG)</button>
+        </div>
+
+        <div class="section-container">
+            <div id="seating-card">
+                <div class="seating-title">
+                    <div class="date-time">6月16日（二）晚上18:30</div>
+                    <div class="main-title">榮榮園 晚宴</div>
+                    <div class="details">包廂，共計12人</div>
+                </div>
+                
+                <div class="seating-wrapper" id="seating-wrapper">
+                    <div class="round-table">主桌</div>
+                    </div>
+            </div>
+            <button id="btn-export-seating" class="btn" onclick="exportImage('seating-card', 'seating_chart.png')" disabled>匯出座位表 (PNG) - 請先安排所有座位</button>
+        </div>
+
+        <div class="section-container" style="border-bottom: none;">
+            <h3 style="color: var(--ceci-green); margin-top: 0; text-align: center;">餐廳位置資訊</h3>
+            <a href="https://www.google.com/maps/place/%E6%A6%AE%E6%A6%AE%E5%9C%92%E6%B5%99%E5%AF%A7%E9%A4%90%E5%BB%B3/@25.0335834,121.5420585,855m/data=!3m3!1e3!4b1!5s0x3442abd309c6784d:0xe7f5a588d46fcc43!4m6!3m5!1s0x3442abcc2c7ddce5:0x53866bcc6c9eae0e!8m2!3d25.0335786!4d121.5446388!16s%2Fg%2F1td1yz1f?authuser=0&entry=ttu&g_ep=EgoyMDI2MDYxMC4wIKXMDSoASAFQAw%3D%3D" target="_blank" class="fallback-link">點擊此連結開啟 Google 地圖查看店址</a>
+        </div>
+
+    </div>
+</div>
+
+<script>
+    // 賓客名單
+    const guestsList = [
+        '張志勇教授', '陶治中教授', '王子安副總', '陳彥均協理',
+        '陳智淵副理', '鄒政修副理', '范景皓協理', '張志華經理',
+        '游上民經理', '吳錫賢協理', '許家成副理', '陳聖堯協理'
+    ];
+
+    let seatingArr = new Array(12).fill("");
+
+    // 渲染圓桌與下拉選單座位
+    function renderSeating() {
+        const wrapper = document.getElementById('seating-wrapper');
+        // 清除舊有的座位方框 (保留主桌)
+        wrapper.querySelectorAll('.seat-box').forEach(el => el.remove());
+
+        const radius = 40; // 座位距離圓心的百分比半徑
+        
+        for (let i = 0; i < 12; i++) {
+            // 從12點鐘方向開始順時針
+            const angle = (i * 30 - 90) * (Math.PI / 180); 
+            const x = 50 + radius * Math.cos(angle);
+            const y = 50 + radius * Math.sin(angle);
+
+            const seatBox = document.createElement('div');
+            seatBox.className = 'seat-box';
+            seatBox.style.left = `${x}%`;
+            seatBox.style.top = `${y}%`;
+
+            const select = document.createElement('select');
+            select.className = 'guest-select';
+            select.onchange = (e) => updateSeat(i, e.target.value);
+
+            let options = `<option value="">- 請選擇 -</option>`;
+            guestsList.forEach(guest => {
+                const isSelectedHere = seatingArr[i] === guest;
+                // 防呆機制：若已在其他位置被選過，則將該選項禁用
+                const isSelectedElsewhere = seatingArr.includes(guest) && !isSelectedHere;
+                options += `<option value="${guest}" ${isSelectedHere ? 'selected' : ''} ${isSelectedElsewhere ? 'disabled' : ''}>${guest}</option>`;
+            });
+
+            select.innerHTML = options;
+            seatBox.appendChild(select);
+            wrapper.appendChild(seatBox);
+        }
+        
+        // 檢查是否全部排滿
+        const allFilled = seatingArr.every(seat => seat !== "");
+        const exportBtn = document.getElementById('btn-export-seating');
+        
+        if (allFilled) {
+            exportBtn.disabled = false;
+            exportBtn.innerText = "匯出座位表 (PNG)";
+            exportBtn.style.backgroundColor = "var(--ceci-green)";
+        } else {
+            exportBtn.disabled = true;
+            exportBtn.innerText = "匯出座位表 (PNG) - 請先安排所有座位";
+            exportBtn.style.backgroundColor = "#b0bec5";
+        }
+    }
+
+    // 更新座位資料與重新渲染防呆列表
+    function updateSeat(index, value) {
+        seatingArr[index] = value;
+        renderSeating();
+    }
+
+    // 呼叫 html2canvas 匯出圖片
+    function exportImage(elementId, filename) {
+        const element = document.getElementById(elementId);
+        html2canvas(element, { 
+            scale: 2,
+            backgroundColor: (elementId === 'seating-card' ? '#ffffff' : '#D32F2F')
+        }).then(canvas => {
+            const link = document.createElement('a');
+            link.download = filename;
+            link.href = canvas.toDataURL('image/png');
+            link.click();
+        });
+    }
+
+    // 網頁載入後直接渲染座位表
+    window.onload = renderSeating;
+</script>
+
+</body>
+</html>
