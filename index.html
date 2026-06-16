@@ -105,10 +105,9 @@
         .seating-wrapper {
             position: relative;
             width: 95%;
-            max-width: 480px; /* 加大容器寬度，避免方框變大後互相擁擠 */
+            max-width: 480px; 
             margin: 0 auto;
         }
-        /* 透過 ::before 維持 1:1 比例 */
         .seating-wrapper::before {
             content: "";
             display: block;
@@ -140,7 +139,7 @@
             border: 2px solid var(--ceci-green);
             border-radius: 6px;
             padding: 3px 5px;
-            width: 115px; /* 加寬方框，足以容納「張志勇教授」等長字串 */
+            width: 115px; 
             box-shadow: 0 2px 6px rgba(0,0,0,0.1);
             z-index: 2;
         }
@@ -155,14 +154,68 @@
             padding: 6px 0;
             outline: none;
             cursor: pointer;
-            white-space: nowrap; /* 強制不換行 */
-            /* 移除原生外觀以確保美觀 */
+            white-space: nowrap; 
             -webkit-appearance: none;
             -moz-appearance: none;
             appearance: none;
         }
         .guest-select:focus {
             color: var(--ceci-green);
+        }
+
+        /* 交通方式區塊 */
+        #transport-card {
+            background-color: #fff;
+            padding: 20px 15px;
+            border: 2px solid #ddd;
+            border-radius: 12px;
+            margin-top: 15px;
+            margin-bottom: 15px;
+        }
+        .transport-title {
+            text-align: center;
+            color: var(--ceci-green);
+            font-weight: bold;
+            font-size: 20px;
+            margin-top: 0;
+            margin-bottom: 20px;
+        }
+        .transport-list {
+            display: flex;
+            flex-direction: column;
+            gap: 10px;
+        }
+        .transport-item {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 10px;
+            background-color: #fafafa;
+            border-radius: 8px;
+            border-left: 4px solid var(--ceci-green);
+        }
+        .t-guest-name {
+            font-weight: bold;
+            font-size: 15px;
+            color: #333;
+        }
+        .t-controls {
+            display: flex;
+            gap: 8px;
+        }
+        .t-select {
+            padding: 6px 10px;
+            border: 1px solid #ccc;
+            border-radius: 4px;
+            font-size: 14px;
+            outline: none;
+        }
+        .t-select:focus {
+            border-color: var(--ceci-green);
+        }
+        /* 隱藏車號選單的預設 class */
+        .hidden {
+            display: none;
         }
 
         /* 地圖區塊 */
@@ -209,6 +262,14 @@
             <button id="btn-export-seating" class="btn" onclick="exportImage('seating-card', 'seating_chart.png')" disabled>匯出座位表 (PNG) - 請先安排所有座位</button>
         </div>
 
+        <div class="section-container">
+            <div id="transport-card">
+                <h3 class="transport-title">賓客交通與併車安排</h3>
+                <div class="transport-list" id="transport-list-container">
+                    </div>
+            </div>
+            </div>
+
         <div class="section-container" style="border-bottom: none;">
             <h3 style="color: var(--ceci-green); margin-top: 0; text-align: center;">餐廳位置資訊</h3>
             <a href="https://www.google.com/maps/place/%E6%A6%AE%E6%A6%AE%E5%9C%92%E6%B5%99%E5%AF%A7%E9%A4%90%E5%BB%B3/@25.0335834,121.5420585,855m/data=!3m3!1e3!4b1!5s0x3442abd309c6784d:0xe7f5a588d46fcc43!4m6!3m5!1s0x3442abcc2c7ddce5:0x53866bcc6c9eae0e!8m2!3d25.0335786!4d121.5446388!16s%2Fg%2F1td1yz1f?authuser=0&entry=ttu&g_ep=EgoyMDI2MDYxMC4wIKXMDSoASAFQAw%3D%3D" target="_blank" class="fallback-link">點擊此連結開啟 Google 地圖查看店址</a>
@@ -227,16 +288,20 @@
 
     let seatingArr = new Array(12).fill("");
 
+    // 初始化頁面內容
+    window.onload = function() {
+        renderSeating();
+        renderTransport();
+    };
+
     // 渲染圓桌與下拉選單座位
     function renderSeating() {
         const wrapper = document.getElementById('seating-wrapper');
-        // 清除舊有的座位方框 (保留主桌)
         wrapper.querySelectorAll('.seat-box').forEach(el => el.remove());
 
-        const radius = 42; // 微調座位距離圓心的百分比半徑
+        const radius = 42; 
         
         for (let i = 0; i < 12; i++) {
-            // 從12點鐘方向開始順時針
             const angle = (i * 30 - 90) * (Math.PI / 180); 
             const x = 50 + radius * Math.cos(angle);
             const y = 50 + radius * Math.sin(angle);
@@ -253,7 +318,6 @@
             let options = `<option value="">- 請選擇 -</option>`;
             guestsList.forEach(guest => {
                 const isSelectedHere = seatingArr[i] === guest;
-                // 防呆機制：若已在其他位置被選過，則將該選項禁用
                 const isSelectedElsewhere = seatingArr.includes(guest) && !isSelectedHere;
                 options += `<option value="${guest}" ${isSelectedHere ? 'selected' : ''} ${isSelectedElsewhere ? 'disabled' : ''}>${guest}</option>`;
             });
@@ -263,7 +327,6 @@
             wrapper.appendChild(seatBox);
         }
         
-        // 檢查是否全部排滿
         const allFilled = seatingArr.every(seat => seat !== "");
         const exportBtn = document.getElementById('btn-export-seating');
         
@@ -284,12 +347,71 @@
         renderSeating();
     }
 
+    // 渲染交通方式列表
+    function renderTransport() {
+        const container = document.getElementById('transport-list-container');
+        container.innerHTML = '';
+
+        guestsList.forEach((guest, index) => {
+            const itemDiv = document.createElement('div');
+            itemDiv.className = 'transport-item';
+
+            // 姓名區塊
+            const nameDiv = document.createElement('div');
+            nameDiv.className = 't-guest-name';
+            nameDiv.innerText = guest;
+
+            // 控制選項區塊
+            const controlsDiv = document.createElement('div');
+            controlsDiv.className = 't-controls';
+
+            // 交通方式選單
+            const typeSelect = document.createElement('select');
+            typeSelect.className = 't-select';
+            typeSelect.innerHTML = `
+                <option value="self">自行前往</option>
+                <option value="taxi">計程車</option>
+            `;
+
+            // 車號選單 (預設隱藏)
+            const taxiSelect = document.createElement('select');
+            taxiSelect.className = 't-select hidden';
+            taxiSelect.innerHTML = `
+                <option value="" disabled selected>選擇車號</option>
+                <option value="1">車號 1</option>
+                <option value="2">車號 2</option>
+                <option value="3">車號 3</option>
+                <option value="4">車號 4</option>
+                <option value="5">車號 5</option>
+                <option value="6">車號 6</option>
+            `;
+
+            // 監聽交通方式變更事件
+            typeSelect.onchange = function() {
+                if (this.value === 'taxi') {
+                    taxiSelect.classList.remove('hidden');
+                } else {
+                    taxiSelect.classList.add('hidden');
+                    taxiSelect.value = ''; // 切換回自行前往時清空車號
+                }
+            };
+
+            controlsDiv.appendChild(typeSelect);
+            controlsDiv.appendChild(taxiSelect);
+
+            itemDiv.appendChild(nameDiv);
+            itemDiv.appendChild(controlsDiv);
+
+            container.appendChild(itemDiv);
+        });
+    }
+
     // 呼叫 html2canvas 匯出圖片
     function exportImage(elementId, filename) {
         const element = document.getElementById(elementId);
         html2canvas(element, { 
             scale: 2,
-            backgroundColor: (elementId === 'seating-card' ? '#ffffff' : '#D32F2F')
+            backgroundColor: (elementId === 'seating-card' || elementId === 'transport-card' ? '#ffffff' : '#D32F2F')
         }).then(canvas => {
             const link = document.createElement('a');
             link.download = filename;
@@ -298,8 +420,6 @@
         });
     }
 
-    // 網頁載入後直接渲染座位表
-    window.onload = renderSeating;
 </script>
 
 </body>
