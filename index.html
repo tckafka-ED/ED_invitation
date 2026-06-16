@@ -105,7 +105,7 @@
         .seating-wrapper {
             position: relative;
             width: 95%;
-            max-width: 420px;
+            max-width: 480px; /* 加大容器寬度，避免方框變大後互相擁擠 */
             margin: 0 auto;
         }
         /* 透過 ::before 維持 1:1 比例 */
@@ -119,8 +119,8 @@
             top: 50%;
             left: 50%;
             transform: translate(-50%, -50%);
-            width: 42%;
-            height: 42%;
+            width: 40%;
+            height: 40%;
             background-color: var(--ceci-green);
             border: 4px solid var(--ceci-light);
             color: white;
@@ -139,8 +139,8 @@
             background: #fff;
             border: 2px solid var(--ceci-green);
             border-radius: 6px;
-            padding: 2px;
-            width: 85px; /* 適合手機的寬度，防重疊 */
+            padding: 3px 5px;
+            width: 115px; /* 加寬方框，足以容納「張志勇教授」等長字串 */
             box-shadow: 0 2px 6px rgba(0,0,0,0.1);
             z-index: 2;
         }
@@ -155,6 +155,7 @@
             padding: 6px 0;
             outline: none;
             cursor: pointer;
+            white-space: nowrap; /* 強制不換行 */
             /* 移除原生外觀以確保美觀 */
             -webkit-appearance: none;
             -moz-appearance: none;
@@ -184,10 +185,10 @@
             <div id="invitation-card">
                 <h1>邀請函</h1>
                 <p>敬愛的長官與貴賓 您好：</p>
-                <p>為感謝您的支持與指導<br>特設晚宴款待，敬邀 撥冗出席</p>
+                <p>為感謝您的支持與指教<br>特設晚宴款待，敬邀 撥冗出席</p>
                 <div class="invitation-details">
                     <p>【時間】6月16日（二）晚上 18:30</p>
-                    <p>【地點】榮榮園 包廂晚宴</p>
+                    <p>【地點】榮榮園 晚宴包廂</p>
                 </div>
             </div>
             <button class="btn" style="background-color: var(--festive-red);" onclick="exportImage('invitation-card', 'invitation.png')">匯出邀請函 (PNG)</button>
@@ -232,7 +233,7 @@
         // 清除舊有的座位方框 (保留主桌)
         wrapper.querySelectorAll('.seat-box').forEach(el => el.remove());
 
-        const radius = 40; // 座位距離圓心的百分比半徑
+        const radius = 42; // 微調座位距離圓心的百分比半徑
         
         for (let i = 0; i < 12; i++) {
             // 從12點鐘方向開始順時針
